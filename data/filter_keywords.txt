@@ -1,0 +1,13 @@
+$META
+$NIO
+$APPL
+Silver
+$AMZN
+$NVDA
+$TSLA
+$MSFT
+Gold
+$NFLX
+OIL
+NASDAQ
+S&P 500

@@ -1,0 +1,18 @@
+This is the Twitter to Telegram Bot
+
+Quickstart:
+1. To set the keywords that you want to match in the latest tweets use:
+/set_keywords - '$NVDA' '$TSLA' '$AMZN' '$APPL' '$NIO' '$MSFT' '$NFLX' '$META' 'Gold' 'Silver' 'NASDAQ' 'S&P 500' 'OIL'
+
+2. To monitor an individual twitter user use:
+/monitor @DeItaone @X_to_telegram_bot
+
+3. To officially make the bot start posting the new tweets
+/start_sharing @X_to_telegram_bot
+
+If you are annoyed or want to stop the sharing of tweets send
+/stop_sharing @X_to_telegram_bot
+
+If you want to see these commands or your current configuration type on the telegram chat type
+/help @X_to_telegram_bot
+
