@@ -16,3 +16,6 @@ If you are annoyed or want to stop the sharing of tweets send
 If you want to see these commands or your current configuration type on the telegram chat type
 /help @X_to_telegram_bot
 
+
+Project requirements:
+py -m pip install -r requirements.txt

@@ -180,10 +180,3 @@ if __name__ == "__main__":
     # app.add_handler(CommandHandler("stop_monitor", stop_monitor)) # not needed yet
 
     app.run_polling(poll_interval=3)
-
-
-# pip install requests
-# pip install beautifulsoup4
-# pip install "python-telegram-bot[job-queue]"
-# pip install git+https://github.com/vladkens/twscrape.git
-# pip install python-dotenv
