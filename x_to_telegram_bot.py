@@ -1,3 +1,5 @@
+import os
+import sys
 import re
 from datetime import datetime
 from dotenv import load_dotenv
@@ -164,6 +166,10 @@ def start_repeating_job():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        directory_path = sys.argv[1]
+        os.chdir(sys.argv[1])
+
     app = Application.builder().token(BotConstants.BOT_TOKEN).build()
     app.injected_bot_data_processor = processor
 
