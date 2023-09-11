@@ -19,3 +19,11 @@ If you want to see these commands or your current configuration type on the tele
 
 Project requirements:
 py -m pip install -r requirements.txt
+
+Or
+pip install python-dotenv
+pip install beautifulsoup4
+pip install requests
+pip install git+https://github.com/vladkens/twscrape.git
+pip install "python-telegram-bot[job-queue]"
+

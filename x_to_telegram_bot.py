@@ -160,7 +160,7 @@ def remove_repeating_job(context):
 
 
 def start_repeating_job():
-    job_queue.run_repeating(send_scheduled_message, 30, name=BotConstants.AUTOMATIC_POLL_AND_MSG_JOB_NAME)
+    job_queue.run_repeating(send_scheduled_message, 60, name=BotConstants.AUTOMATIC_POLL_AND_MSG_JOB_NAME)
 
 
 if __name__ == "__main__":
