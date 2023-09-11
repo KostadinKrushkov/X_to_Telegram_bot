@@ -7,6 +7,10 @@ class Scheduler:
     end_time = datetime.strptime("23:30:00", time_format).time()
 
     @classmethod
+    def get_available_zone(cls):
+        return f'{cls.start_time} - {cls.end_time}'
+
+    @classmethod
     def is_time_in_range(cls, current_time):
         return cls.start_time <= current_time <= cls.end_time
 

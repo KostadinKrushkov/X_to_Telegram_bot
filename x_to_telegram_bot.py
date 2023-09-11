@@ -130,7 +130,7 @@ async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYP
         await context.bot.send_message(
             chat_id=chat_id,
             text='Successfully started bot. '
-                 'Every minute the latest tweets will be read and you will be notified if it hits your keywords!')
+                 f'Every minute the latest tweets will be read and you will be notified if it hits your keywords at the scheduled time ({Scheduler.get_available_zone()})!')
 
 
 async def stop_sharing_tweets(update, context):
