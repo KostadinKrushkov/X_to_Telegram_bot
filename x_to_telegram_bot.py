@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import re
@@ -13,6 +14,24 @@ from bot_data_processor import BotDataProcessor
 from constants import BotConstants
 from twitter_scraper import TwitterScraper
 
+
+def setup_logging(log_directory='log'):
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
+
+    log_file_path = os.path.join(log_directory, 'bot.log')
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file_path),
+            logging.StreamHandler(),  # Optionally, also display logs in the console
+        ]
+    )
+    return logging.getLogger(BotConstants.BOT_NAME)
+
+
+logger = setup_logging()
 processor = BotDataProcessor()
 
 
@@ -75,28 +94,8 @@ async def monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"Successfully started monitoring the user {twitter_user}.")
 
 
-# async def stop_monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     processor = context.application.injected_bot_data_processor
-#
-#     twitter_user = context.args[-1]
-#     if not str(twitter_user).startswith('@'):
-#         return await update.message.reply_text(f"The commands need to have a @user at the end "
-#                                                f"e.g. /stop_monitor {bot_name} @DeItaone")
-#
-#     if twitter_user in processor.monitored_twitter_user:
-#         processor.monitored_twitter_user.remove(twitter_user)
-#
-#         # Rewrite the entire monitored users list in the file
-#         with open(processor.MONITORED_USER_FILE, 'w') as file:
-#             file.writelines(user + '\n' for user in processor.monitored_twitter_user)
-#
-#         await update.message.reply_text(f"Successfully stopped monitoring the user {twitter_user}."
-#                                         f"The current list of users being followed is: {processor.monitored_twitter_user}.")
-#     else:
-#         await update.message.reply_text(f"Currently not monitoring the Twitter user {twitter_user}.")
-
-
 async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Starting scheduled message.")
     if not Scheduler.is_datetime_in_time_range(datetime.now()):
         return
     print("Sending message:" + str(datetime.now()))
@@ -115,7 +114,6 @@ async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
 
     for chat_id in processor.subscribed_chat_ids:
         for message, url in messages_and_urls:
-            print(f"URL for message: {message} \nis {url}")
             await context.bot.send_photo(chat_id, url, caption=message)
 
 
@@ -162,7 +160,7 @@ def remove_repeating_job(context):
 
 
 def start_repeating_job():
-    job_queue.run_repeating(send_scheduled_message, 60, name=BotConstants.AUTOMATIC_POLL_AND_MSG_JOB_NAME)
+    job_queue.run_repeating(send_scheduled_message, 30, name=BotConstants.AUTOMATIC_POLL_AND_MSG_JOB_NAME)
 
 
 if __name__ == "__main__":
@@ -183,6 +181,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start_sharing", start_sharing_tweets))
     app.add_handler(CommandHandler("stop_sharing", stop_sharing_tweets))
     app.add_handler(CommandHandler("monitor", monitor))
-    # app.add_handler(CommandHandler("stop_monitor", stop_monitor)) # not needed yet
-
+    logger.info("Starting bot!")
     app.run_polling(poll_interval=3)
