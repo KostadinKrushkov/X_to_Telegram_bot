@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from constants import DESIRED_TIMEZONE
-
 
 class Scheduler:
     time_format = '%H:%M:%S'
-    start_time = datetime.strptime("10:00:00", time_format).time()
-    end_time = datetime.strptime("23:30:00", time_format).time()
+
+    # Deployment environment is UTC -> UTC to Sofia time is -3 Hours = 10:00 - 23:30 is 07:00 to 20:30 in UTC
+    start_time = datetime.strptime("7:00:00", time_format).time()
+    end_time = datetime.strptime("20:30:00", time_format).time()
 
     @classmethod
     def get_available_zone(cls):
@@ -27,4 +27,4 @@ if __name__ == "__main__":
     print(Scheduler.start_time)
     print(Scheduler.start_time > Scheduler.end_time)
     print(Scheduler.is_time_in_range(datetime.strptime("22:30:00", Scheduler.time_format).time()))
-    print(Scheduler.is_datetime_in_time_range(datetime.now(DESIRED_TIMEZONE)))
+    print(Scheduler.is_datetime_in_time_range(datetime.now()))

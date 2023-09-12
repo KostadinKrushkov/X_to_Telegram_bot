@@ -9,7 +9,7 @@ from datetime import datetime
 from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram import Update
 from bot_data_processor import BotDataProcessor
-from constants import BotConstants, DESIRED_TIMEZONE
+from constants import BotConstants
 from scheduler import Scheduler
 from twitter_scraper import TwitterScraper
 
@@ -101,7 +101,7 @@ async def monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
     logger.info("Starting scheduled message.")
-    if not Scheduler.is_datetime_in_time_range(datetime.now(DESIRED_TIMEZONE)):
+    if not Scheduler.is_datetime_in_time_range(datetime.now()):
         return
 
     processor = context.application.injected_bot_data_processor

@@ -47,4 +47,3 @@ class TwitterAccountsConstants:
     ]
 
 
-DESIRED_TIMEZONE = pytz.timezone("Europe/Istanbul")
