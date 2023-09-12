@@ -25,10 +25,16 @@ def setup_logging(log_directory='log'):
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.FileHandler(log_file_path),
-            logging.StreamHandler(),  # Optionally, also display logs in the console
-        ]
+            logging.StreamHandler(),
+        ],
+        datefmt='%m/%d/%Y %I:%M:%S %p',
     )
-    return logging.getLogger(BotConstants.BOT_NAME)
+
+    logger = logging.getLogger(BotConstants.BOT_NAME)
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.flush()
+    return logger
 
 
 logger = setup_logging()
