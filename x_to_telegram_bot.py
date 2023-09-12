@@ -118,11 +118,17 @@ async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
 
     for chat_id in processor.subscribed_chat_ids:
         for message, url in messages_and_urls:
-            await context.bot.send_photo(chat_id, url, caption=message)
+            await context.bot.send_message(chat_id=chat_id, text=message)
+            # await context.bot.send_photo(chat_id, url, caption=message)  # send photo of google search as well
 
 
 async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
+    if not context.args or not context.args[-1] == os.getenv("BOT_PASSWORD"):
+        await context.bot.send_message(
+            chat_id, 'Incorrect password. Will not start notifying until correct password is entered.')
+        return
+
     context.application.injected_bot_data_processor.add_subscribed_chat_id(chat_id)
 
     remove_repeating_job(context)
@@ -134,7 +140,7 @@ async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYP
         await context.bot.send_message(
             chat_id=chat_id,
             text='Successfully started bot. '
-                 f'Every minute the latest tweets will be read and you will be notified if it hits your keywords at the scheduled time ({Scheduler.get_available_zone()})!')
+                 f'Every minute the latest tweets will be read and you will be notified if it hits your keywords at the scheduled time ({Scheduler.get_available_zone()} UTC)!')
 
 
 async def stop_sharing_tweets(update, context):

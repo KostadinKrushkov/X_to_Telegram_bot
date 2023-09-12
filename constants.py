@@ -1,6 +1,5 @@
 from collections import namedtuple
 import os
-import pytz
 
 
 class ScraperConstants:
