@@ -1,17 +1,16 @@
-import logging
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
+import logging
 import sys
 import re
 from datetime import datetime
-from dotenv import load_dotenv
-from scheduler import Scheduler
-load_dotenv()
-
 from telegram.ext import Application, CommandHandler, ContextTypes
 from telegram import Update
-
 from bot_data_processor import BotDataProcessor
-from constants import BotConstants
+from constants import BotConstants, DESIRED_TIMEZONE
+from scheduler import Scheduler
 from twitter_scraper import TwitterScraper
 
 
@@ -102,9 +101,8 @@ async def monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
     logger.info("Starting scheduled message.")
-    if not Scheduler.is_datetime_in_time_range(datetime.now()):
+    if not Scheduler.is_datetime_in_time_range(datetime.now(DESIRED_TIMEZONE)):
         return
-    print("Sending message:" + str(datetime.now()))
 
     processor = context.application.injected_bot_data_processor
     scraper = context.application.injected_scraper

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from constants import DESIRED_TIMEZONE
+
 
 class Scheduler:
     time_format = '%H:%M:%S'
@@ -25,4 +27,4 @@ if __name__ == "__main__":
     print(Scheduler.start_time)
     print(Scheduler.start_time > Scheduler.end_time)
     print(Scheduler.is_time_in_range(datetime.strptime("22:30:00", Scheduler.time_format).time()))
-    print(Scheduler.is_datetime_in_time_range(datetime.now()))
+    print(Scheduler.is_datetime_in_time_range(datetime.now(DESIRED_TIMEZONE)))

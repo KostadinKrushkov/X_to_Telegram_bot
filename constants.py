@@ -1,5 +1,6 @@
 from collections import namedtuple
 import os
+import pytz
 
 
 class ScraperConstants:
@@ -44,3 +45,6 @@ class TwitterAccountsConstants:
         TwitterAccount(username=THIRD_USERNAME, password=THIRD_PASSWORD,
                        email=THIRD_EMAIL, email_password=THIRD_EMAIL_PASSWORD),
     ]
+
+
+DESIRED_TIMEZONE = pytz.timezone("Europe/Istanbul")
