@@ -57,7 +57,12 @@ class TwitterScraper:
         self.last_tweet_id = last_tweet_id
 
     async def reset_user(self, username):
-        user = await self.api.user_by_login(username)
+        user = None
+        for i in range(10):
+            user = await self.api.user_by_login(username)
+            if user is not None:
+                break
+
         self.user_dict = user.dict()
         self.save_monitored_user(user.json())
 
