@@ -53,8 +53,8 @@ Quickstart:
 2. To monitor an individual twitter user use:
 /monitor @DeItaone @X_to_telegram_bot
 
-3. To officially make the bot start posting the new tweets
-/start_sharing @X_to_telegram_bot
+3. To officially make the bot start posting the new tweets to your chat:
+/start_sharing @X_to_telegram_bot <Bot Password>
 
 If you are annoyed or want to stop the sharing of tweets send
 /stop_sharing @X_to_telegram_bot    
