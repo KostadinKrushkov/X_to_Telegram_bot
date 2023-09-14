@@ -36,10 +36,6 @@ def setup_logging(log_directory='log'):
     return logger
 
 
-logger = setup_logging()
-processor = BotDataProcessor()
-
-
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_currently_sharing = update.message.chat_id in context.application.injected_bot_data_processor.subscribed_chat_ids
     current_configuration = f"""
@@ -129,7 +125,8 @@ async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYP
             chat_id, 'Incorrect password. Will not start notifying until correct password is entered.')
         return
 
-    context.application.injected_bot_data_processor.add_subscribed_chat_id(chat_id)
+    processor = context.application.injected_bot_data_processor
+    processor.add_subscribed_chat_id(chat_id)
 
     remove_repeating_job(context)
 
@@ -178,8 +175,11 @@ if __name__ == "__main__":
         directory_path = sys.argv[1]
         os.chdir(sys.argv[1])
 
+    logger = setup_logging()
+    bot_data_processor = BotDataProcessor()
+
     app = Application.builder().token(BotConstants.BOT_TOKEN).build()
-    app.injected_bot_data_processor = processor
+    app.injected_bot_data_processor = bot_data_processor
 
     app.injected_scraper = TwitterScraper()
 
