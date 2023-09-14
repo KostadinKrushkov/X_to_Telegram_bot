@@ -90,10 +90,10 @@ class TwitterScraper:
                     matching_keywords.append(keyword)
                     important_message_to_keywords[message] = matching_keywords
 
-        message_prefix = f"""Twitter (https://twitter.com/{username})
-{self.user_dict['displayname']} (@{username}) / X
-
-"""
+#         message_prefix = f"""Twitter (https://twitter.com/{username})
+# {self.user_dict['displayname']} (@{username}) / X
+#
+# """
 
         self.last_tweet_id = tweets[0].id
         self.save_last_tweet_id()
@@ -101,7 +101,7 @@ class TwitterScraper:
         list_of_messages_and_google_urls = []
         for message, keywords in important_message_to_keywords.items():
             google_url = get_random_google_image(keywords[0])
-            list_of_messages_and_google_urls.append((message_prefix + message, google_url))
+            list_of_messages_and_google_urls.append((message, google_url))
 
         return list_of_messages_and_google_urls
 
