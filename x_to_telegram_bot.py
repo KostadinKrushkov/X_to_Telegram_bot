@@ -73,7 +73,7 @@ If you are annoyed or want to stop the sharing of tweets
 - For chats send this command:
 /stop_sharing @X_to_telegram_bot
 
-- For channels send this command to the bot privately (using the channel id that you received when you forwarded the /post_to_channel message)
+- For channels send this command to the bot privately (using the channel id that yoWill not start notifying until correct password is entered.u received when you forwarded the /post_to_channel message)
 /stop_sharing_to_channel <channel id> <Bot Password>
 
 """ + current_configuration)
@@ -138,7 +138,7 @@ async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
 async def validate_password_or_send_error_message(password, context, chat_id):
     if password != os.getenv("BOT_PASSWORD"):
         await context.bot.send_message(
-            chat_id, 'Incorrect password. Will not start notifying until correct password is entered.')
+            chat_id, 'Incorrect password. Will not change behavior until correct password is entered.')
         return False
     return True
 
@@ -234,12 +234,12 @@ async def stop_sharing_to_channel(update, context):
                      '\nIf you have forgotten the channel id send "/post_to_channel" in your channel and forward it to this bot again. ')
         return
 
-    if len(context.args) == 2:
-        chat_id = context.args[0]
     password = context.args[-1]
-
     if not await validate_password_or_send_error_message(password, context, chat_id):
         return
+
+    if len(context.args) == 2:
+        chat_id = context.args[0]
     await _stop_sharing_tweets(chat_id, context)
 
 
