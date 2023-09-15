@@ -63,6 +63,9 @@ class BotDataProcessor:
     def get_formatted_keywords(self):
         return ','.join([f"'{keyword}'" for keyword in self.filter_keywords])
 
+    def get_formatted_subscribed_chat_ids(self):
+        return ','.join([f"'{keyword}'" for keyword in self.subscribed_chat_ids])
+
     def set_monitored_user(self, username):
         self.monitored_twitter_user = username
         with open(BotConstants.MONITORED_USER_FILE, 'w') as file:

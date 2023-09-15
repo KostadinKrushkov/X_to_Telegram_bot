@@ -42,7 +42,9 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 Current configuration:
     Monitoring: @{context.application.injected_bot_data_processor.get_formatted_monitored_username()}
     Keywords: {context.application.injected_bot_data_processor.get_formatted_keywords()}
-    Sharing {'disabled' if not is_currently_sharing else 'enabled'}  
+    Sharing {'disabled' if not is_currently_sharing else 'enabled'} for current chat.
+    {f'Sharing enabled for chats {context.application.injected_bot_data_processor.get_formatted_subscribed_chat_ids()}' 
+    if context.application.injected_bot_data_processor.subscribed_chat_ids else ''}
 """
     await update.message.reply_text("""This is the Twitter to Telegram Bot
 
@@ -53,11 +55,26 @@ Quickstart:
 2. To monitor an individual twitter user use:
 /monitor @DeItaone @X_to_telegram_bot
 
-3. To officially make the bot start posting the new tweets to your chat:
-/start_sharing @X_to_telegram_bot <Bot Password>
+# Choose chat or channel
+3.1. To officially make the bot start posting the new tweets to your chat:
+/start_sharing @X_to_telegram_bot <bot Password>
 
-If you are annoyed or want to stop the sharing of tweets send
-/stop_sharing @X_to_telegram_bot    
+To make the bot start posting the new tweets to your channel.
+3.2.1. Add the @X_to_telegram_bot to your channel with admin rights and then write /post_to_channel in your channel chat.
+
+3.2.2. Forward that message to the bot privately (right click message -> forward -> @X_to_twitter_bot). 
+This will show you the channel id that you need to pass on the next command.
+
+Finally execute:
+3.2.3. /start_sharing <channel id> <bot Password>
+
+
+If you are annoyed or want to stop the sharing of tweets
+- For chats send this command:
+/stop_sharing @X_to_telegram_bot
+
+- For channels send this command to the bot privately (using the channel id that you received when you forwarded the /post_to_channel message)
+/stop_sharing_to_channel <channel id> <Bot Password>
 
 """ + current_configuration)
 
@@ -114,17 +131,19 @@ async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
 
     for chat_id in processor.subscribed_chat_ids:
         for message, url in messages_and_urls:
-            await context.bot.send_message(chat_id=chat_id, text=message)
+            await context.bot.send_message(chat_id=chat_id, text=message, disable_web_page_preview=True)
             # await context.bot.send_photo(chat_id, url, caption=message)  # send photo of google search as well
 
 
-async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.message.chat_id
-    if not context.args or not context.args[-1] == os.getenv("BOT_PASSWORD"):
+async def validate_password_or_send_error_message(password, context, chat_id):
+    if password != os.getenv("BOT_PASSWORD"):
         await context.bot.send_message(
             chat_id, 'Incorrect password. Will not start notifying until correct password is entered.')
-        return
+        return False
+    return True
 
+
+async def _start_sharing_tweets_on_chat_id(chat_id, context):
     processor = context.application.injected_bot_data_processor
     processor.add_subscribed_chat_id(chat_id)
 
@@ -140,14 +159,88 @@ async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYP
                  f'Every minute the latest tweets will be read and you will be notified if it hits your keywords at the scheduled time ({Scheduler.get_available_zone()} UTC)!')
 
 
-async def stop_sharing_tweets(update, context):
+async def start_sharing_tweets(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
+    if not context.args:
+        await context.bot.send_message(
+            chat_id, 'Incorrect data passed. Please use the command in the following format:'
+                     '/start_sharing <bot password>')
+        return
+
+    password = context.args[-1]
+    if not await validate_password_or_send_error_message(password, context, chat_id):
+        return
+
+    await _start_sharing_tweets_on_chat_id(chat_id, context)
+
+
+async def start_sharing_tweets_on_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.message.chat_id
+    if not context.args or len(context.args) > 2:
+        await context.bot.send_message(
+            chat_id, 'Incorrect data passed. Please use the command in the following format:'
+                     '/start_sharing_on_channel <channel_id> <bot password>')
+        return
+
+    password = context.args[-1]
+    if not await validate_password_or_send_error_message(password, context, chat_id):
+        return
+
+    if len(context.args) == 2:
+        chat_id = context.args[-2]
+    await _start_sharing_tweets_on_chat_id(chat_id, context)
+
+
+async def _stop_sharing_tweets(chat_id, context):
     if chat_id not in context.application.injected_bot_data_processor.subscribed_chat_ids:
         await context.bot.send_message(chat_id=chat_id, text='You have already stopped the automatic messages.')
     else:
         context.application.injected_bot_data_processor.remove_subscribed_chat_id(chat_id)
         await context.bot.send_message(chat_id=chat_id, text='Stopping automatic messages!')
     remove_repeating_job(context)
+
+    if context.application.injected_bot_data_processor.subscribed_chat_ids:
+        start_repeating_job()
+
+
+async def stop_sharing_tweets(update, context):
+    chat_id = update.message.chat_id
+    await _stop_sharing_tweets(chat_id, context)
+
+
+async def post_to_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    channel_id = None
+    try:
+        channel_id = update.message.forward_from_chat.id
+    except:
+        pass
+
+    if channel_id:
+        await context.bot.send_message(chat_id=update.message.chat_id,
+                                       text=f'Successfully subscribed to channel with id "{channel_id}". \nRemember this id.'
+                                            f'Please enter the following command with the bot password to finalize.'
+                                            f'\n/start_sharing_on_channel {channel_id} <bot password>')
+    else:
+        await context.bot.send_message(chat_id=update.message.chat_id,
+                                       text='Please forward this message from the channel you want to follow to the bot. (after you have added the bot as an admin.)')
+
+
+async def stop_sharing_to_channel(update, context):
+    chat_id = update.message.chat_id
+    if not context.args or len(context.args) > 2:
+        await context.bot.send_message(
+            chat_id, 'Incorrect data passed. Please use the command in the following format:'
+                     '\n/stop_sharing_to_channel <channel_id> <bot password>. '
+                     '\nIf you have forgotten the channel id send "/post_to_channel" in your channel and forward it to this bot again. ')
+        return
+
+    if len(context.args) == 2:
+        chat_id = context.args[0]
+    password = context.args[-1]
+
+    if not await validate_password_or_send_error_message(password, context, chat_id):
+        return
+    await _stop_sharing_tweets(chat_id, context)
 
 
 async def send_bot_not_configured(chat_id, context):
@@ -190,6 +283,9 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("set_keywords", set_keywords))
     app.add_handler(CommandHandler("start_sharing", start_sharing_tweets))
     app.add_handler(CommandHandler("stop_sharing", stop_sharing_tweets))
+    app.add_handler(CommandHandler("start_sharing_on_channel", start_sharing_tweets_on_channel))
+    app.add_handler(CommandHandler("stop_sharing_to_channel", stop_sharing_to_channel))
     app.add_handler(CommandHandler("monitor", monitor))
+    app.add_handler(CommandHandler("post_to_channel", post_to_channel))
     logger.info("Starting bot!")
     app.run_polling(poll_interval=3)
