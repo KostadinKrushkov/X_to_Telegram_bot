@@ -239,7 +239,7 @@ async def stop_sharing_to_channel(update, context):
         return
 
     if len(context.args) == 2:
-        chat_id = context.args[0]
+        chat_id = context.args[-2]
     await _stop_sharing_tweets(chat_id, context)
 
 
