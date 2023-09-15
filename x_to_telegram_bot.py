@@ -217,8 +217,8 @@ async def post_to_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if channel_id:
         await context.bot.send_message(chat_id=update.message.chat_id,
-                                       text=f'Successfully subscribed to channel with id "{channel_id}". \nRemember this id.'
-                                            f'Please enter the following command with the bot password to finalize.'
+                                       text=f'Please remember this channel id "{channel_id}". \n'
+                                            f'Enter the following command with the bot password to finalize.'
                                             f'\n/start_sharing_on_channel {channel_id} <bot password>')
     else:
         await context.bot.send_message(chat_id=update.message.chat_id,
