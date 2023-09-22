@@ -76,11 +76,11 @@ class TwitterScraper:
         important_message_to_keywords = {}
         tweets = await gather(self.api.user_tweets(self.user_dict['id'], limit=50))
         for tweet in tweets:
-            if not Scheduler.is_datetime_in_time_range(tweet.date):
-                continue
-
             if self.last_tweet_id and tweet.id == self.last_tweet_id:
                 break
+
+            if not Scheduler.is_datetime_in_time_range(tweet.date):
+                continue
 
             message = tweet.rawContent
             message = message.replace('&amp;', '&')
