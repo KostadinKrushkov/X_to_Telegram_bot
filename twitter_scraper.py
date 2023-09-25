@@ -13,7 +13,7 @@ set_log_level("DEBUG")
 
 class TwitterScraper:
     user_dict = None
-    last_tweet_id = None
+    last_tweet_id = None  # TODO should be renamed latest
     api = None
 
     def __init__(self):
@@ -75,6 +75,8 @@ class TwitterScraper:
 
         important_message_to_keywords = {}
         tweets = await gather(self.api.user_tweets(self.user_dict['id'], limit=50))
+        tweets = sorted(tweets, key=lambda tweet: tweet.date, reverse=True)
+
         for tweet in tweets:
             if self.last_tweet_id and tweet.id == self.last_tweet_id:
                 break
