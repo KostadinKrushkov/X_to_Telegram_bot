@@ -13,12 +13,12 @@ set_log_level("DEBUG")
 
 class TwitterScraper:
     user_dict = None
-    last_tweet_id = None  # TODO should be renamed latest
+    latest_tweet_id = None
     api = None
 
     def __init__(self):
         self._load_user_dict()
-        self._load_last_tweet_id()
+        self._load_latest_tweet_id()
 
     def save_monitored_user(self, data_json):
         try:
@@ -29,9 +29,9 @@ class TwitterScraper:
             print(f"Error saving dictionary to file: {e}")
             return False
 
-    def save_last_tweet_id(self):
-        with open(ScraperConstants.LAST_TWEET_ID_FILE, "w") as file:
-            file.write(str(self.last_tweet_id) if self.last_tweet_id else '')
+    def save_latest_tweet_id(self):
+        with open(ScraperConstants.LATEST_TWEET_ID_FILE, "w") as file:
+            file.write(str(self.latest_tweet_id) if self.latest_tweet_id else '')
 
     def _load_user_dict(self):
         try:
@@ -46,15 +46,15 @@ class TwitterScraper:
             user_dict = None
         self.user_dict = user_dict
 
-    def _load_last_tweet_id(self):
-        last_tweet_id = None
-        if os.path.exists(ScraperConstants.LAST_TWEET_ID_FILE):
-            with open(ScraperConstants.LAST_TWEET_ID_FILE, "r") as file:
+    def _load_latest_tweet_id(self):
+        latest_tweet_id = None
+        if os.path.exists(ScraperConstants.LATEST_TWEET_ID_FILE):
+            with open(ScraperConstants.LATEST_TWEET_ID_FILE, "r") as file:
                 input = file.read()
                 if input:
-                    last_tweet_id = int(input)
+                    latest_tweet_id = int(input)
 
-        self.last_tweet_id = last_tweet_id
+        self.latest_tweet_id = latest_tweet_id
 
     async def reset_user(self, username):
         user = None
@@ -78,10 +78,10 @@ class TwitterScraper:
         tweets = sorted(tweets, key=lambda tweet: tweet.date, reverse=True)
 
         for tweet in tweets:
-            if self.last_tweet_id and tweet.id == self.last_tweet_id:
+            if self.latest_tweet_id and tweet.id == self.latest_tweet_id:
                 break
 
-            if not Scheduler.is_datetime_in_time_range(tweet.date):
+            if not Scheduler.is_datetime_from_today(tweet.date) or not Scheduler.is_datetime_in_time_range(tweet.date):
                 continue
 
             message = tweet.rawContent
@@ -97,8 +97,8 @@ class TwitterScraper:
 #
 # """
 
-        self.last_tweet_id = tweets[0].id
-        self.save_last_tweet_id()
+        self.latest_tweet_id = tweets[0].id
+        self.save_latest_tweet_id()
 
         list_of_messages_and_google_urls = []
         for message, keywords in important_message_to_keywords.items():

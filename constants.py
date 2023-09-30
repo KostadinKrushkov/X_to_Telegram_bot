@@ -3,7 +3,7 @@ import os
 
 
 class ScraperConstants:
-    LAST_TWEET_ID_FILE = "data/last_tweet_id.txt"
+    LATEST_TWEET_ID_FILE = "data/latest_tweet_id.txt"
     MONITORED_USER_DATA_FILE = "data/user_data.txt"
 
 
