@@ -127,7 +127,9 @@ async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
         remove_repeating_job(context)
         return
 
-    messages_and_urls = await scraper.poll_latest_tweets(username, processor.filter_keywords)
+    await scraper.save_latest_tweets(username)
+    messages_and_urls = await scraper.get_unposed_tweet_messages_and_mark_the_tweets_as_posted(
+        username, processor.filter_keywords)
 
     for chat_id in processor.subscribed_chat_ids:
         for message, url in messages_and_urls:

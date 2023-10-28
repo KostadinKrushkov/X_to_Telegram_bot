@@ -1,10 +1,13 @@
-import os
 import json
 import asyncio
+from collections import defaultdict
+from datetime import datetime
+
 from twscrape import API, gather
 from twscrape.logger import set_log_level
 
 from constants import ScraperConstants, TwitterAccountsConstants
+from database_controller import DatabaseController
 from google.google_search import get_random_google_image
 from scheduler import Scheduler
 
@@ -18,7 +21,7 @@ class TwitterScraper:
 
     def __init__(self):
         self._load_user_dict()
-        self._load_latest_tweet_id()
+        self.controller = DatabaseController()
 
     def save_monitored_user(self, data_json):
         try:
@@ -28,10 +31,6 @@ class TwitterScraper:
         except Exception as e:
             print(f"Error saving dictionary to file: {e}")
             return False
-
-    def save_latest_tweet_id(self):
-        with open(ScraperConstants.LATEST_TWEET_ID_FILE, "w") as file:
-            file.write(str(self.latest_tweet_id) if self.latest_tweet_id else '')
 
     def _load_user_dict(self):
         try:
@@ -46,16 +45,6 @@ class TwitterScraper:
             user_dict = None
         self.user_dict = user_dict
 
-    def _load_latest_tweet_id(self):
-        latest_tweet_id = None
-        if os.path.exists(ScraperConstants.LATEST_TWEET_ID_FILE):
-            with open(ScraperConstants.LATEST_TWEET_ID_FILE, "r") as file:
-                input = file.read()
-                if input:
-                    latest_tweet_id = int(input)
-
-        self.latest_tweet_id = latest_tweet_id
-
     async def reset_user(self, username):
         user = None
         for i in range(10):
@@ -66,39 +55,36 @@ class TwitterScraper:
         self.user_dict = user.dict()
         self.save_monitored_user(user.json())
 
-    async def poll_latest_tweets(self, username, keywords):
+    async def save_latest_tweets(self, username):
         if self.api is None:
             self.api = await initialize_twscrape_api()
 
         if not self.user_dict or self.user_dict.get('username') != username:
             await self.reset_user(username)
 
-        important_message_to_keywords = {}
-        tweets = await gather(self.api.user_tweets(self.user_dict['id'], limit=50))
+        tweets = await gather(self.api.user_tweets(self.user_dict['id'], limit=10))
         tweets = sorted(tweets, key=lambda tweet: tweet.date, reverse=True)
 
         for tweet in tweets:
-            if self.latest_tweet_id and tweet.id == self.latest_tweet_id:
-                break
+            self.controller.insert_tweet(tweet)
 
-            if not Scheduler.is_datetime_from_today(tweet.date) or not Scheduler.is_datetime_in_time_range(tweet.date):
+    async def get_unposed_tweet_messages_and_mark_the_tweets_as_posted(self, username, keywords):
+        important_message_to_keywords = defaultdict(list)
+
+        for tweet in self.controller.retrieve_today_unposted_tweets(username):
+            self.controller.mark_tweet_as_posted(tweet.tweet_id)
+
+            tweet_datetime = datetime.strptime(tweet.date, self.controller.DATETIME_FORMAT)
+            if not Scheduler.is_datetime_from_today(tweet_datetime) \
+                    or not Scheduler.is_datetime_in_time_range(tweet_datetime):
                 continue
 
-            message = tweet.rawContent
+            message = tweet.message
             message = message.replace('&amp;', '&')
             for keyword in keywords:
                 if keyword in message:
-                    matching_keywords = important_message_to_keywords.get(message, [])
+                    matching_keywords = important_message_to_keywords[message]
                     matching_keywords.append(keyword)
-                    important_message_to_keywords[message] = matching_keywords
-
-#         message_prefix = f"""Twitter (https://twitter.com/{username})
-# {self.user_dict['displayname']} (@{username}) / X
-#
-# """
-
-        self.latest_tweet_id = tweets[0].id
-        self.save_latest_tweet_id()
 
         list_of_messages_and_google_urls = []
         for message, keywords in important_message_to_keywords.items():
@@ -120,5 +106,9 @@ async def initialize_twscrape_api():
 
 if __name__ == "__main__":
     scraper = TwitterScraper()
-    messages_and_urls = asyncio.run(scraper.poll_latest_tweets('DeItaone', ['$TSLA', 'Gold', '$AAPL', 'OIL']))
+
+    test_username = 'DeItaone'
+    asyncio.run(scraper.save_latest_tweets(test_username))
+    messages_and_urls = asyncio.run(scraper.get_unposed_tweet_messages_and_mark_the_tweets_as_posted(
+        test_username, ['$TSLA', 'Gold', '$AAPL', 'OIL', '$AMZN', '$INTC']))
     print(messages_and_urls)
