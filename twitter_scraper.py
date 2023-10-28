@@ -16,7 +16,6 @@ set_log_level("DEBUG")
 
 class TwitterScraper:
     user_dict = None
-    latest_tweet_id = None
     api = None
 
     def __init__(self):
