@@ -23,7 +23,7 @@ def setup_logging(log_directory='log'):
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler(log_file_path),
+            logging.FileHandler(log_file_path, 'a', 'utf-8'),
             logging.StreamHandler(),
         ],
         datefmt='%m/%d/%Y %I:%M:%S %p',
@@ -46,6 +46,8 @@ Current configuration:
     {f'Sharing enabled for chats {context.application.injected_bot_data_processor.get_formatted_subscribed_chat_ids()}' 
     if context.application.injected_bot_data_processor.subscribed_chat_ids else ''}
 """
+
+    logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Sending quick start info in response to /help")
     await update.message.reply_text("""This is the Twitter to Telegram Bot
 
 Quickstart:
@@ -73,7 +75,7 @@ If you are annoyed or want to stop the sharing of tweets
 - For chats send this command:
 /stop_sharing @X_to_telegram_bot
 
-- For channels send this command to the bot privately (using the channel id that yoWill not start notifying until correct password is entered.u received when you forwarded the /post_to_channel message)
+- For channels send this command to the bot privately (using the channel id that you get. It will not start notifying until correct password is entered.u received when you forwarded the /post_to_channel message)
 /stop_sharing_to_channel <channel id> <Bot Password>
 
 """ + current_configuration)
@@ -113,7 +115,7 @@ async def monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
-    logger.info("Starting scheduled message.")
+    logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Starting scheduled message.")
     if not Scheduler.is_datetime_in_time_range(datetime.now()):
         return
 
@@ -133,12 +135,14 @@ async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):
 
     for chat_id in processor.subscribed_chat_ids:
         for message, url in messages_and_urls:
-            await context.bot.send_message(chat_id=chat_id, text=message, disable_web_page_preview=True)
+            logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Sending scheduled message: '{message}' to chat '{str(chat_id)}'")
+            await context.bot.send_message(chat_id=chat_id, text=str(message), disable_web_page_preview=True)
             # await context.bot.send_photo(chat_id, url, caption=message)  # send photo of google search as well
 
 
 async def validate_password_or_send_error_message(password, context, chat_id):
     if password != os.getenv("BOT_PASSWORD"):
+        logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|The validation failed because user passed incorrect password.")
         await context.bot.send_message(
             chat_id, 'Incorrect password. Will not change behavior until correct password is entered.')
         return False
@@ -155,6 +159,7 @@ async def _start_sharing_tweets_on_chat_id(chat_id, context):
         await send_bot_not_configured(chat_id, context)
     else:
         start_repeating_job()
+        logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Successfully started bot.")
         await context.bot.send_message(
             chat_id=chat_id,
             text='Successfully started bot. '
@@ -190,6 +195,8 @@ async def start_sharing_tweets_on_channel(update: Update, context: ContextTypes.
 
     if len(context.args) == 2:
         chat_id = context.args[-2]
+
+    logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Started sharing tweets to chat_id: {str(chat_id)}")
     await _start_sharing_tweets_on_chat_id(chat_id, context)
 
 
@@ -242,6 +249,8 @@ async def stop_sharing_to_channel(update, context):
 
     if len(context.args) == 2:
         chat_id = context.args[-2]
+
+    logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Stopped sharing tweets to chat_id: {str(chat_id)}")
     await _stop_sharing_tweets(chat_id, context)
 
 
@@ -289,5 +298,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("stop_sharing_to_channel", stop_sharing_to_channel))
     app.add_handler(CommandHandler("monitor", monitor))
     app.add_handler(CommandHandler("post_to_channel", post_to_channel))
-    logger.info("Starting bot!")
+    logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Starting bot!")
     app.run_polling(poll_interval=3)

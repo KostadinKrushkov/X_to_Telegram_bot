@@ -14,6 +14,7 @@ class BotConstants:
     SUBSCRIBED_CHAT_IDS_FILE = 'data/subscribed_chat_ids.json'
     MONITORED_USER_FILE = 'data/monitored_user.txt'
     FILTER_KEYWORDS_FILE = 'data/filter_keywords.txt'
+    IMPORTANT_LOG_MARKER = '#IMPORTANT_LOG'
 
 
 TwitterAccount = namedtuple('TwitterAccount', ['username', 'password', 'email', 'email_password'])
