@@ -74,9 +74,9 @@ Finally execute:
 
 If you are annoyed or want to stop the sharing of tweets
 - For chats send this command:
-/stop_sharing @X_to_telegram_bot <bot sharing password>
+/stop_sharing <bot sharing password>
 
-- For channels send this command to the bot privately (using the channel id that you get. It will not start notifying until correct password is entered.u received when you forwarded the /post_to_channel message)
+- For channels send this command to the bot privately (using the channel id that you get. It will not start notifying until correct password is received when you forwarded the /post_to_channel message)
 /stop_sharing_to_channel <channel id> <bot sharing password>
 
 """ + current_configuration)
@@ -252,10 +252,16 @@ async def _stop_sharing_tweets(chat_id, context):
 
 async def stop_sharing_tweets(update, context):
     chat_id = update.message.chat_id
-    if not await validate_args_and_password_for_normal_command(chat_id, update, context):
+    if not context.args:
+        logger.error(
+            f"{BotConstants.IMPORTANT_LOG_MARKER}|Failed to execute stop_sharing for chat_id: {str(chat_id)} "
+            f"due to incorrect parameters passed. Please use the template for this command shown in the /help. "
+            f"Command issued by {str(update.effective_user)}")
+
+    password = context.args[-1]
+    if not await validate_password_or_send_error_message(password, update, context, chat_id, is_start_stop_sharing_command=True):
         return
 
-    chat_id = update.message.chat_id
     logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}|Request to shop sharing tweets for chat_id: {str(chat_id)}."
                 f"Command issued by {str(update.effective_user)}")
     await _stop_sharing_tweets(chat_id, context)
