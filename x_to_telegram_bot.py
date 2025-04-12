@@ -112,7 +112,11 @@ async def set_keywords(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.message.chat_id
+    message = update.message or update.edited_message or update.channel_post or update.edited_channel_post or (update.callback_query.message if update.callback_query else None)
+    if not message:
+        logger.error("Could not find message to reply to.")
+
+    chat_id = message.chat_id
     if not await validate_args_and_password_for_normal_command(chat_id, update, context, num_required_args=2):
         return
 
@@ -124,13 +128,13 @@ async def monitor(update: Update, context: ContextTypes.DEFAULT_TYPE):
                      f"The twitter user needs to start with @."
                      f"Command issued by {str(update.effective_user)}")
 
-        return await update.message.reply_text(f"The commands need to have a @user and password."
+        return await message.reply_text(f"The commands need to have a @user and password."
                                                f"e.g. /monitor {BotConstants.BOT_NAME} @DeItaone <bot normal command password>")
 
     logger.info(f"{BotConstants.IMPORTANT_LOG_MARKER}| Changing the person to monitor to: '{str(twitter_user)}'. "
                 f"Command issued by {str(update.effective_user)}")
     processor.set_monitored_user(twitter_user)
-    await update.message.reply_text(f"Successfully started monitoring the user {twitter_user}.")
+    await message.reply_text(f"Successfully started monitoring the user {twitter_user}.")
 
 
 async def send_scheduled_message(context: ContextTypes.DEFAULT_TYPE):

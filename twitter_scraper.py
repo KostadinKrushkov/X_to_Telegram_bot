@@ -7,7 +7,7 @@ from twscrape import API, gather
 from twscrape.logger import set_log_level
 
 from constants import ScraperConstants, TwitterAccountsConstants
-from database_controller import DatabaseController
+from db.database_controller import DatabaseController
 from google.google_search import get_random_google_image
 from scheduler import Scheduler
 
@@ -65,13 +65,15 @@ class TwitterScraper:
         tweets = sorted(tweets, key=lambda tweet: tweet.date, reverse=True)
 
         for tweet in tweets:
-            self.controller.insert_tweet(tweet)
+            await self.controller.insert_tweet(tweet)
 
     async def get_unposed_tweet_messages_and_mark_the_tweets_as_posted(self, username, keywords):
         important_message_to_keywords = defaultdict(list)
 
-        for tweet in self.controller.retrieve_today_unposted_tweets(username):
-            self.controller.mark_tweet_as_posted(tweet.tweet_id)
+        tweets = await self.controller.retrieve_today_unposted_tweets(username)
+
+        for tweet in tweets:
+            await self.controller.mark_tweet_as_posted(tweet.tweet_id)
 
             tweet_datetime = datetime.strptime(tweet.date, self.controller.DATETIME_FORMAT)
             if not Scheduler.is_datetime_from_today(tweet_datetime) \
@@ -104,10 +106,13 @@ async def initialize_twscrape_api():
 
 
 if __name__ == "__main__":
-    scraper = TwitterScraper()
+    async def main():
+        scraper = TwitterScraper()
+        test_username = 'DeItaone'
+        await scraper.save_latest_tweets(test_username)
+        messages_and_urls = await scraper.get_unposed_tweet_messages_and_mark_the_tweets_as_posted(
+            test_username, ['$TSLA', 'Gold', '$AAPL', 'OIL', '$AMZN', '$INTC']
+        )
+        print(messages_and_urls)
 
-    test_username = 'DeItaone'
-    asyncio.run(scraper.save_latest_tweets(test_username))
-    messages_and_urls = asyncio.run(scraper.get_unposed_tweet_messages_and_mark_the_tweets_as_posted(
-        test_username, ['$TSLA', 'Gold', '$AAPL', 'OIL', '$AMZN', '$INTC']))
-    print(messages_and_urls)
+    asyncio.run(main())

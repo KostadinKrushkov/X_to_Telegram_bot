@@ -30,3 +30,5 @@ pip install requests
 pip install git+https://github.com/vladkens/twscrape.git
 pip install "python-telegram-bot[job-queue]"
 
+Pythonanywhere task: /usr/local/bin/python3.10 /home/rocazzar/X_to_Telegram_bot/x_to_telegram_bot.py
+
