@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import asyncio
 from datetime import datetime
@@ -17,11 +18,13 @@ class Tweet:
 
 
 class DatabaseController:
-    DB_NAME = BotConstants.DATABASE_PATH
+    # Resolve absolute DB path and ensure directory exists
+    DB_NAME = os.path.abspath(BotConstants.DATABASE_PATH)
     DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
     DATE_FORMAT = '%Y-%m-%d'
 
     def __init__(self):
+        os.makedirs(os.path.dirname(self.DB_NAME), exist_ok=True)
         self.lock = asyncio.Lock()
         self._initialize_db()
 
@@ -127,5 +130,22 @@ if __name__ == "__main__":
         tweets = await controller.retrieve_tweets_by_author('FinancialPear')
         for tweet in tweets:
             print(tweet)
+
+        # Example: insert, retrieve, and mark tweets
+        # from twitter_scraper import TwitterScraper
+        # scraper = TwitterScraper()
+        # tweets = await scraper.save_latest_tweets('DeItaone', ['$TSLA', 'Gold', '$AAPL', 'OIL'])
+        #
+        # for tweet in tweets:
+        #     await controller.insert_tweet(tweet)
+        #
+        # unposted = await controller.retrieve_today_unposted_tweets('DeItaone')
+        # for tweet in unposted:
+        #     print(tweet.message)
+        #     await controller.mark_tweet_as_posted(tweet.tweet_id)
+        #
+        # unposted = await controller.retrieve_today_unposted_tweets('DeItaone')
+        # for tweet in unposted:
+        #     print(tweet.message)
 
     asyncio.run(main())
