@@ -34,6 +34,7 @@ class DatabaseController:
         return conn
 
     def _initialize_db(self):
+        conn = None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
@@ -52,7 +53,8 @@ class DatabaseController:
             print(f"Error initializing database: {e}")
             raise
         finally:
-            conn.close()
+            if conn:
+                conn.close()
 
     @async_retry_on_lock()
     async def insert_tweet(self, tweet):
@@ -72,7 +74,7 @@ class DatabaseController:
                 ''', (tweet_id, date, is_posted, message, author))
                 conn.commit()
             except IntegrityError:
-                pass
+                pass  # Tweet already exists
             finally:
                 conn.close()
 
