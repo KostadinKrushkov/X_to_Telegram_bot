@@ -23,29 +23,36 @@ class DatabaseController:
 
     def __init__(self):
         self.lock = asyncio.Lock()
-        # Note: init db sync since __init__ can't be async
         self._initialize_db()
 
     def _get_connection(self):
         conn = sqlite3.connect(self.DB_NAME, timeout=10, check_same_thread=False)
-        conn.execute('PRAGMA journal_mode=WAL')
+        try:
+            conn.execute('PRAGMA journal_mode=WAL')
+        except sqlite3.OperationalError as e:
+            print(f"Warning: Could not set journal_mode to WAL: {e}")
         return conn
 
     def _initialize_db(self):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS tweets (
-                id INTEGER PRIMARY KEY,
-                tweet_id INTEGER UNIQUE,
-                is_posted INTEGER,
-                date TEXT,
-                message TEXT,
-                author TEXT
-            )
-        ''')
-        conn.commit()
-        conn.close()
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS tweets (
+                    id INTEGER PRIMARY KEY,
+                    tweet_id INTEGER UNIQUE,
+                    is_posted INTEGER,
+                    date TEXT,
+                    message TEXT,
+                    author TEXT
+                )
+            ''')
+            conn.commit()
+        except sqlite3.OperationalError as e:
+            print(f"Error initializing database: {e}")
+            raise
+        finally:
+            conn.close()
 
     @async_retry_on_lock()
     async def insert_tweet(self, tweet):
@@ -118,22 +125,5 @@ if __name__ == "__main__":
         tweets = await controller.retrieve_tweets_by_author('FinancialPear')
         for tweet in tweets:
             print(tweet)
-
-        # Example: insert, retrieve, and mark tweets
-        # from twitter_scraper import TwitterScraper
-        # scraper = TwitterScraper()
-        # tweets = await scraper.save_latest_tweets('DeItaone', ['$TSLA', 'Gold', '$AAPL', 'OIL'])
-        #
-        # for tweet in tweets:
-        #     await controller.insert_tweet(tweet)
-        #
-        # unposted = await controller.retrieve_today_unposted_tweets('DeItaone')
-        # for tweet in unposted:
-        #     print(tweet.message)
-        #     await controller.mark_tweet_as_posted(tweet.tweet_id)
-        #
-        # unposted = await controller.retrieve_today_unposted_tweets('DeItaone')
-        # for tweet in unposted:
-        #     print(tweet.message)
 
     asyncio.run(main())
