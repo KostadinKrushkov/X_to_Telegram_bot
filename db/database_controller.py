@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime
 from sqlite3.dbapi2 import IntegrityError
 
+from constants import BotConstants
 from db.db_utilities import async_retry_on_lock
 
 
@@ -16,7 +17,7 @@ class Tweet:
 
 
 class DatabaseController:
-    DB_NAME = 'data/database'
+    DB_NAME = BotConstants.DATABASE_PATH
     DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
     DATE_FORMAT = '%Y-%m-%d'
 

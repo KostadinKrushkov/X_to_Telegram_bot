@@ -15,6 +15,7 @@ class BotConstants:
     MONITORED_USER_FILE = 'data/monitored_user.txt'
     FILTER_KEYWORDS_FILE = 'data/filter_keywords.txt'
     IMPORTANT_LOG_MARKER = '#IMPORTANT_LOG'
+    DATABASE_PATH = 'data/database.db'
 
 
 TwitterAccount = namedtuple('TwitterAccount', ['username', 'password', 'email', 'email_password'])
